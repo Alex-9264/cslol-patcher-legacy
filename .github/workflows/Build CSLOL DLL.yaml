@@ -1,5 +1,4 @@
-name: Build CSLOL Patcher
-
+name: Build CSLol Patcher DLL
 on:
   workflow_dispatch:
 
@@ -8,33 +7,31 @@ jobs:
     runs-on: windows-2022
 
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
+    - name: "Clone source"
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
-      - name: Setup MSVC environment
-        uses: ilammy/msvc-dev-cmd@v1
+    - name: "Setup MSVC"
+      uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Build DLL
-        run: |
-          mkdir build
-          cd build
-          cmake -G "NMake Makefiles" ^
-                -DCMAKE_BUILD_TYPE=RelWithDebInfo ^
-                -DCMAKE_C_COMPILER=clang-cl ^
-                -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded ..
-          cmake --build .
+    - name: "Build DLL"
+      shell: cmd
+      run: |
+        mkdir build
+        cd build
+        cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=clang-cl -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded ..
+        cmake --build .
 
-      - name: Package DLL
-        shell: bash
-        run: |
-          7z a cslol-patcher.zip build/cslol-*
-          7z rn cslol-patcher.zip build/ cslol-patcher/
+    - name: "Package DLL"
+      shell: cmd
+      run: |
+        7z a cslol-patcher.zip build\cslol-*
+        7z rn cslol-patcher.zip build\ cslol-patcher\
 
-      - name: Upload DLL artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: cslol-patcher
-          path: cslol-patcher.zip
-          retention-days: 15
+    - name: "Upload Artifact"
+      uses: actions/upload-artifact@v4
+      with:
+        name: cslol-patcher
+        path: cslol-patcher.zip
+        retention-days: 15
