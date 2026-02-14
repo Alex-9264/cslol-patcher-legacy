@@ -1,0 +1,41 @@
+name: Build CSLOL DLL
+
+on:
+  workflow_dispatch:  # allows you to trigger manually
+
+jobs:
+  build-dll:
+    runs-on: windows-2022
+
+    steps:
+    # 1. Clone your repo
+    - name: Checkout repo
+      uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    # 2. Setup MSVC environment
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+
+    # 3. Build the DLL using CMake
+    - name: Build cslol-dll-legacy.dll
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        cmake --build . --config RelWithDebInfo --target cslol-dll-legacy
+
+    # 4. Package DLL into a ZIP
+    - name: Package DLL
+      run: |
+        cd build
+        7z a cslol-dll-legacy.zip cslol-dll-legacy.dll
+
+    # 5. Upload artifact
+    - name: Upload DLL artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: cslol-dll
+        path: build/cslol-dll-legacy.zip
+        retention-days: 15
