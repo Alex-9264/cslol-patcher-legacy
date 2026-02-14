@@ -1,41 +1,40 @@
-name: Build CSLOL DLL
+name: Build CSLOL Patcher
 
 on:
-  workflow_dispatch:  # allows you to trigger manually
+  workflow_dispatch:
 
 jobs:
-  build-dll:
+  build:
     runs-on: windows-2022
 
     steps:
-    # 1. Clone your repo
-    - name: Checkout repo
-      uses: actions/checkout@v3
-      with:
-        submodules: true
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
 
-    # 2. Setup MSVC environment
-    - name: Setup MSVC
-      uses: ilammy/msvc-dev-cmd@v1
+      - name: Setup MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
 
-    # 3. Build the DLL using CMake
-    - name: Build cslol-dll-legacy.dll
-      run: |
-        mkdir build
-        cd build
-        cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
-        cmake --build . --config RelWithDebInfo --target cslol-dll-legacy
+      - name: Build DLL
+        run: |
+          mkdir build
+          cd build
+          cmake -G "NMake Makefiles" ^
+                -DCMAKE_BUILD_TYPE=RelWithDebInfo ^
+                -DCMAKE_C_COMPILER=clang-cl ^
+                -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded ..
+          cmake --build .
 
-    # 4. Package DLL into a ZIP
-    - name: Package DLL
-      run: |
-        cd build
-        7z a cslol-dll-legacy.zip cslol-dll-legacy.dll
+      - name: Package DLL
+        shell: bash
+        run: |
+          7z a cslol-patcher.zip build/cslol-*
+          7z rn cslol-patcher.zip build/ cslol-patcher/
 
-    # 5. Upload artifact
-    - name: Upload DLL artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: cslol-dll
-        path: build/cslol-dll-legacy.zip
-        retention-days: 15
+      - name: Upload DLL artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cslol-patcher
+          path: cslol-patcher.zip
+          retention-days: 15
